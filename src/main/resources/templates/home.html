@@ -1,0 +1,20 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AirX Backend</title>
+    <meta charset="UTF-8"/>
+</head>
+
+<body>
+    <h4>AirX Backend Is Online</h4>
+    <div style="font-family: Menlo, Monaco, Consolas, Monospaced, serif">
+        <p>&nbsp;Local Time: <span id="time"></span></p>
+        <p>Server Time: <span th:text="${serverTime}"></span></p>
+    </div>
+</body>
+
+<script>
+    document.getElementById("time").innerHTML = Date();
+</script>
+
+</html>
