@@ -10,21 +10,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 @RestController
 public class GreetingsController extends BaseController {
     @GetMapping("/api/v1/greetings")
     GreetingsResponse greetings(@AuthenticationPrincipal Jwt token) {
-        User user = getUserFromJwtToken(token);
-        if (user == null) {
+        Optional<User> userOpt = getUserFromJwtToken(token);
+        if (userOpt.isEmpty()) {
             return GreetingsResponse.fail("User does not exist");
         }
+        User user = userOpt.get();
+
         return GreetingsResponse.builder()
             .success(true)
             .message("Hello, " + user.getName() + "!")
             .name(user.getName())
             .uid(user.getUid())
-            .validBefore(user.getValidBefore())
             .build();
     }
 
@@ -36,7 +38,6 @@ public class GreetingsController extends BaseController {
         private String message;
         private String name;
         private Integer uid;
-        private Timestamp validBefore;
 
         public static GreetingsResponse fail(String message) {
             return GreetingsResponse.builder()

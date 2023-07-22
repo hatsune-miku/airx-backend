@@ -1,16 +1,13 @@
 package com.eggtartc.airxbackend.entity;
 
 import com.eggtartc.airxbackend.util.HashUtil;
+import com.eggtartc.airxbackend.util.PasswordUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.Hibernate;
 
-import java.sql.Timestamp;
-import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Objects;
-import java.util.TimeZone;
-
+import java.util.Collection;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,14 +26,31 @@ public class User {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
     @Basic
-    @Column(name = "valid_before", nullable = false)
-    private Timestamp validBefore;
+    @Column(name = "email", nullable = false, length = 255)
+    private String email;
     @Basic
+    @Column(name = "activated", nullable = false)
+    private boolean activated;
+    @Basic
+    @JsonIgnore
     @Column(name = "password", nullable = false, length = 128)
     private String password;
     @Basic
+    @JsonIgnore
     @Column(name = "salt", nullable = false, length = 64)
     private String salt;
+    @Basic
+    @JsonIgnore
+    @Column(name = "token_limit", nullable = false)
+    private Integer tokenLimit;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private Collection<File> files;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private Collection<FileShare> fileSharesById;
 
     @Override
     public boolean equals(Object o) {
@@ -52,9 +66,7 @@ public class User {
     }
 
     public String calculateSalt(String secret) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        calendar.setTime(validBefore);
-        return HashUtil.sha256(secret + id + uid + name + calendar.getTime().getTime() + secret + password);
+        return HashUtil.sha256(secret + id + uid + name + secret + password);
     }
 
     public boolean isSaltValid(String secret) {
@@ -65,4 +77,7 @@ public class User {
         salt = calculateSalt(secret);
     }
 
+    public void assignPassword(String hp) {
+        password = PasswordUtil.createPassword(hp);
+    }
 }

@@ -10,9 +10,9 @@ public class PasswordUtil {
         return passwordRecovered.equals(realPasswordSalted);
     }
 
-    public static String createPassword(String plaintext) {
+    public static String createPassword(String hp) {
         // pass = salt + h(h(h(plaintext)) + salt)
-        String plaintextSha256Sha256 = HashUtil.sha256(HashUtil.sha256(plaintext));
+        String plaintextSha256Sha256 = HashUtil.sha256(hp);
         String salt = (UUID.randomUUID().toString().replace("-", "")
                 + UUID.randomUUID().toString().replace("-", ""));
         return salt + HashUtil.sha256(plaintextSha256Sha256 + salt);

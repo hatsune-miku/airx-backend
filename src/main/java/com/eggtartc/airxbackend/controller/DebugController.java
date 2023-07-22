@@ -3,13 +3,14 @@ package com.eggtartc.airxbackend.controller;
 import com.eggtartc.airxbackend.security.JwtCrypt;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class DebugController {
-    @RequestMapping("/debug/decrypt-token")
+    @PostMapping("/debug/decrypt-token")
     public DecryptTokenResponse decryptToken(@RequestBody DecryptTokenRequest request) {
         return DecryptTokenResponse.builder()
             .token(JwtCrypt.decrypt(request.token))

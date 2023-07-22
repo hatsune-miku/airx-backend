@@ -14,20 +14,17 @@ import java.io.IOException;
 public class CORSDisablerFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        filterChain.doFilter(request, response);
         if (response instanceof HttpServletResponse servletResponse) {
-            servletResponse.setHeader("Access-Control-Allow-Origin", "*");
+            servletResponse.setHeader("Access-Control-Allow-Origin", ((HttpServletRequest) request).getHeader("Origin"));
             servletResponse.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             servletResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
             servletResponse.setHeader("Access-Control-Max-Age", "3600");
-            servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
 
-            if (request instanceof HttpServletRequest servletRequest
-                && servletRequest.getMethod().equalsIgnoreCase("OPTIONS")) {
+            HttpServletRequest servletRequest = (HttpServletRequest) request;
+            if (servletRequest.getMethod().equalsIgnoreCase("OPTIONS")) {
                 servletResponse.setStatus(HttpServletResponse.SC_OK);
-                return;
             }
         }
-
-        filterChain.doFilter(request, response);
     }
 }

@@ -1,13 +1,19 @@
 package com.eggtartc.airxbackend.config;
 
+import com.eggtartc.airxbackend.config.filter.TokenRemovalFilter;
 import com.eggtartc.airxbackend.security.AirXJwtDecoder;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,6 +24,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -41,25 +48,36 @@ public class SecurityConfig {
         Logger.getLogger("SecurityConfig")
             .info("Security config activated.");
 
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
-        httpSecurity.cors(AbstractHttpConfigurer::disable);
-        httpSecurity.oauth2ResourceServer(cfg -> {
-            cfg.jwt(jwtCfg -> {});
-        });
-        httpSecurity.sessionManagement(cfg -> {
-            cfg.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        });
-        httpSecurity.exceptionHandling(cfg -> {
-            cfg.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint());
-            cfg.accessDeniedHandler(new BearerTokenAccessDeniedHandler());
-        });
-
-        httpSecurity.authorizeHttpRequests(cfg -> {
-            cfg.requestMatchers("/auth/token").permitAll();
-            cfg.requestMatchers("/").permitAll();
-            cfg.requestMatchers("/debug/**").permitAll();
-            cfg.anyRequest().authenticated();
-        });
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+            .cors(AbstractHttpConfigurer::disable)
+            .addFilterBefore(new TokenRemovalFilter(), BearerTokenAuthenticationFilter.class)
+            .oauth2ResourceServer(cfg -> {
+                cfg.jwt(jwtCfg -> {
+                });
+            })
+            .sessionManagement(cfg -> {
+                cfg.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            })
+            .exceptionHandling(cfg -> {
+                cfg.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                    .accessDeniedHandler(new BearerTokenAccessDeniedHandler());
+            })
+            .authorizeHttpRequests(cfg -> {
+                cfg
+                    .requestMatchers("/auth/token").permitAll()
+                    .requestMatchers("/auth/sign-up").permitAll()
+                    .requestMatchers("/auth/check-email").permitAll()
+                    .requestMatchers("/auth/activate/**").permitAll()
+                    .requestMatchers("/").permitAll()
+                    .requestMatchers("/debug/**").permitAll()
+                    .requestMatchers("/api-docs").denyAll()
+                    .requestMatchers("/swagger-ui/**").permitAll()
+                    .requestMatchers("/swagger-ui.html").permitAll()
+                    .requestMatchers("/device-register").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/file/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/share/**").permitAll()
+                    .anyRequest().authenticated();
+            });
 
         return httpSecurity.build();
     }
@@ -68,8 +86,8 @@ public class SecurityConfig {
     CorsConfigurationSource corsDisabler() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.applyPermitDefaultValues();
-        configuration.setAllowCredentials(true);
-        configuration.addAllowedOrigin("*");
+        configuration.setAllowCredentials(false);
+        configuration.addAllowedOriginPattern("*");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
 
@@ -91,5 +109,24 @@ public class SecurityConfig {
             .privateKey(jwtPrivateKey)
             .build();
         return new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(whatIsAJWK)));
+    }
+
+    // 费劲
+    @Bean
+    public OpenAPI openAPI() {
+        return new OpenAPI()
+            .addSecurityItem(
+                new SecurityRequirement().addList("Bearer Authentication")
+            )
+            .components(
+                new Components()
+                    .addSecuritySchemes(
+                        "Bearer Authentication",
+                        new SecurityScheme()
+                            .type(SecurityScheme.Type.HTTP)
+                            .bearerFormat("JWT")
+                            .scheme("bearer")
+                    )
+            );
     }
 }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AirX Backend</title>
+    <meta charset="UTF-8"/>
+</head>
+
+<body>
+</body>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const redirectUrl = /*[[${redirectUrl}]]*/ 'error'
+    const message = /*[[${activationStatusText}]]*/ 'error'
+    const uid = /*[[${uid}]]*/ 'error'
+    /*]]>*/
+
+    function main() {
+        if (redirectUrl === 'error' || message === 'error') {
+            alert('Error: redirectUrl or message is not defined')
+            return
+        }
+
+        location.href = redirectUrl + '?message=' + message + '&uid=' + uid
+    }
+
+    main()
+</script>
+
+</html>

@@ -5,14 +5,7 @@ public class SaltUtil {
         return String.valueOf((System.currentTimeMillis() / 1000 / 10));
     }
 
-    public static String calculateSaltForLogin(
-        String plaintextSha256Sha256,
-        int identityPrincipal
-    ) {
-        return HashUtil.sha256(
-            plaintextSha256Sha256
-                + saltFromCurrentTimestamp()
-                + identityPrincipal
-        );
+    public static String calculateSaltForLogin(String hhp, int uid) {
+        return HashUtil.sha256(hhp + saltFromCurrentTimestamp() + uid);
     }
 }
