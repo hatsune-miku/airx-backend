@@ -1,4 +1,6 @@
 src/main/resources/application.properties
+src/main/resources/public.crt
+src/main/resources/private.key
 
 HELP.md
 .gradle
