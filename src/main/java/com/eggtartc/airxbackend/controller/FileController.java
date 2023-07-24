@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,8 +90,11 @@ public class FileController extends BaseController {
             return ResponseEntity.badRequest().build();
         }
 
+        String encodedFileName = URLEncoder.encode(store.getFileName(), StandardCharsets.UTF_8)
+            .replace("+", "%20");
+
         return ResponseEntity.ok()
-            .header("Content-Disposition", "attachment;filename=" + file.getName())
+            .header("Content-Disposition", "attachment;filename*=UTF-8''" + encodedFileName)
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .contentLength(store.getSize())
             .body(fileResource);
@@ -249,7 +254,7 @@ public class FileController extends BaseController {
 
         // Make alias
         long now = Instant.now().toEpochMilli();
-        long aliasValue = Long.parseLong(String.valueOf(now % 1000) + user.getUid() + now);
+        long aliasValue = (now + user.getUid()) * (long) (Math.random() * 1000);
         String alias = Long.toUnsignedString(aliasValue, 36);
 
         // Create share

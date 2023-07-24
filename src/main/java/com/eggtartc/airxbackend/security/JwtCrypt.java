@@ -34,11 +34,16 @@ public class JwtCrypt {
     }
 
     public static String decrypt(String data) {
-        return new String(
-            AESCrypt.decrypt(
-                Base64.getDecoder().decode(data),
-                ENCRYPTION_KEY_256, IV_16),
-            StandardCharsets.UTF_8
-        );
+        try {
+            byte[] base64DecodedData = Base64.getDecoder().decode(data);
+            byte[] decodedData = AESCrypt.decrypt(base64DecodedData, ENCRYPTION_KEY_256, IV_16);
+            if (decodedData == null) {
+                return null;
+            }
+            return new String(decodedData, StandardCharsets.UTF_8);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

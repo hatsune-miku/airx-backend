@@ -9,3 +9,5 @@ public class SaltUtil {
         return HashUtil.sha256(hhp + saltFromCurrentTimestamp() + uid);
     }
 }
+// hhp = h(h(p))
+// h(hhp + t + uid)

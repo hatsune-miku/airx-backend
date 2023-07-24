@@ -39,10 +39,6 @@ public class User {
     @JsonIgnore
     @Column(name = "salt", nullable = false, length = 64)
     private String salt;
-    @Basic
-    @JsonIgnore
-    @Column(name = "token_limit", nullable = false)
-    private Integer tokenLimit;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

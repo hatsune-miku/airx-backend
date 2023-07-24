@@ -110,7 +110,6 @@ public class AuthenticationController extends BaseController {
                 .email(request.getEmail())
                 .name(request.getNickname())
                 .activated(false)
-                .tokenLimit(0)
                 .salt("0")
                 .build();
 

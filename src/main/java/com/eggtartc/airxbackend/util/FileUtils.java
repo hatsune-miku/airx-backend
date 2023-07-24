@@ -1,8 +1,5 @@
 package com.eggtartc.airxbackend.util;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.logging.Logger;
@@ -35,5 +32,35 @@ public class FileUtils {
                 .severe(e.getMessage());
             return null;
         }
+    }
+
+    public static String encodeFilenameForHttpHeader(String filename) {
+        final char[] chars = filename.toCharArray();
+        final StringBuilder sb = new StringBuilder();
+
+        for (char c : chars) {
+            if (isSafe(c)) {
+                sb.append(c);
+            } else {
+                sb.append('%');
+                sb.append(Integer.toHexString(c).toUpperCase());
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private static boolean isSafe(char c) {
+        if (c <= 127) {
+            if (Character.isDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                return true;
+            }
+            switch (c) {
+                case '-', '.', '_', '~' -> {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

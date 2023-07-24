@@ -31,12 +31,10 @@ public class AirXJwtDecoder implements JwtDecoder {
                 jwtEncoder, "YES", "miku", 1, 1));
         }
 
-        try {
-            String decrypted = JwtCrypt.decrypt(token);
-            return wrappingJwtDecoder.decode(decrypted);
-        }
-        catch (JwtException e) {
+        String decrypted = JwtCrypt.decrypt(token);
+        if (decrypted == null) {
             throw new JwtException("Invalid JWT token.");
         }
+        return wrappingJwtDecoder.decode(decrypted);
     }
 }

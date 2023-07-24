@@ -34,12 +34,12 @@ public class WebSocketService extends TextWebSocketHandler {
             return;
         }
 
+        // Send to all devices logging on the same AirX account.
         userSessions
-            // Don't send to self
-            .stream().filter(session -> session.getRemoteAddress() != null)
-            // Send to all devices logging on the same AirX account.
             .forEach(session -> {
                 try {
+                    String representation = getAddressRepresentation(session).get();
+                    logger.info("Sending to " + representation);
                     session.sendMessage(new BinaryMessage(payload));
                 } catch (Exception ignored) {
                 }
@@ -47,6 +47,7 @@ public class WebSocketService extends TextWebSocketHandler {
     }
 
     private void onUserConnected(User user, WebSocketSession session) {
+        logger.info("User " + user.getName() + " connected");
         CopyOnWriteArrayList<WebSocketSession> userSessions = sessions.get(user);
         if (userSessions == null) {
             userSessions = new CopyOnWriteArrayList<>();
@@ -56,21 +57,25 @@ public class WebSocketService extends TextWebSocketHandler {
     }
 
     private void onUserConnectionClosed(User user, WebSocketSession session) {
+        logger.info("User " + user.getName() + " disconnected");
         CopyOnWriteArrayList<WebSocketSession> userSessions = sessions.get(user);
         if (userSessions == null) {
             return;
         }
-        userSessions.remove(session);
+        userSessions.removeIf(s -> s.getId().equals(session.getId()));
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        InetSocketAddress remoteAddress = session.getRemoteAddress();
-        if (remoteAddress == null) {
+        Optional<String> representationOpt = getAddressRepresentation(session);
+        if (representationOpt.isEmpty()) {
             return;
         }
 
-        User user = inetAddressUserMap.get(getAddressRepresentation(remoteAddress));
+        String representation = representationOpt.get();
+        logger.info("Connection established: " + representation);
+
+        User user = inetAddressUserMap.get(representation);
         if (user == null) {
             return;
         }
@@ -80,33 +85,42 @@ public class WebSocketService extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        InetSocketAddress remoteAddress = session.getRemoteAddress();
-        if (remoteAddress == null) {
+        Optional<String> representationOpt = getAddressRepresentation(session);
+        if (representationOpt.isEmpty()) {
             return;
         }
 
-        User user = inetAddressUserMap.get(getAddressRepresentation(remoteAddress));
+        String representation = representationOpt.get();
+        logger.info("Connection closed: " + representation);
+
+        User user = inetAddressUserMap.get(representation);
         if (user == null) {
             return;
         }
 
+        inetAddressUserMap.remove(representation);
         onUserConnectionClosed(user, session);
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        Optional<String> representationOpt = getAddressRepresentation(session);
+        if (representationOpt.isEmpty()) {
+            return;
+        }
+
+        String representation = representationOpt.get();
+
         try {
             int userUid = Integer.parseInt(message.getPayload());
             Optional<User> userOpt = userRepository.findByUid(userUid);
-            InetSocketAddress remoteAddress = session.getRemoteAddress();
 
-            if (userOpt.isEmpty() || remoteAddress == null) {
-                logger.warning("User " + userUid + " tried to register with " + remoteAddress);
+            if (userOpt.isEmpty()) {
+                logger.warning("User " + userUid + " tried to register with " + representation);
                 return;
             }
 
             User user = userOpt.get();
-            String representation = getAddressRepresentation(remoteAddress);
 
             logger.info("User " + user.getName() + " registered with " + representation);
             inetAddressUserMap.put(representation, user);
@@ -117,7 +131,18 @@ public class WebSocketService extends TextWebSocketHandler {
         }
     }
 
-    private String getAddressRepresentation(InetSocketAddress address) {
-        return address.getHostName() + "@" + address.getAddress().toString() + ":" + address.getPort();
+    private Optional<String> getAddressRepresentation(WebSocketSession session) {
+        String realIpAddress = (String) session.getAttributes().get("X-Real-IP");
+        if (realIpAddress != null) {
+            return Optional.of(realIpAddress);
+        }
+
+        InetSocketAddress address = session.getRemoteAddress();
+        if (address != null) {
+            return Optional.of(
+                address.getHostName() + "@" + address.getAddress().toString() + ":" + address.getPort());
+        }
+
+        return Optional.empty();
     }
 }

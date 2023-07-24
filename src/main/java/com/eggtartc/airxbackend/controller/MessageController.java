@@ -8,6 +8,7 @@ import com.eggtartc.airxbackend.model.Message;
 import com.eggtartc.airxbackend.serializer.MessageSerializer;
 import com.eggtartc.airxbackend.service.WebSocketService;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -64,7 +65,7 @@ public class MessageController extends BaseController {
         );
     }
 
-    @KafkaListener(topics = Topics.SYNCHRONIZATION_MESSAGE)
+    @KafkaListener(topics = Topics.SYNCHRONIZATION_MESSAGE, groupId = "airx")
     public void onMessage(Message message) {
         Optional<User> userOpt = userRepository.findByUid(message.getSenderUid());
         if (userOpt.isEmpty()) {

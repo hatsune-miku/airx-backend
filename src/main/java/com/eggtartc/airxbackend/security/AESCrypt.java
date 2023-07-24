@@ -22,7 +22,7 @@ class AESCrypt {
             cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 }

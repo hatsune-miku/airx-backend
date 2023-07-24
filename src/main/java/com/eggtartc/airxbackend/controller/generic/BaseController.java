@@ -38,6 +38,10 @@ public class BaseController {
     protected RedisTemplate<String, Integer> redisTemplateInteger;
 
     protected Optional<User> getUserFromJwtToken(Jwt token) {
+        if (token == null) {
+            return Optional.empty();
+        }
+
         String userUid = token.getClaimAsString("userUid");
         Optional<User> userOpt = userRepository.findByUid(Integer.parseInt(userUid));
         if (userOpt.isEmpty()) {
