@@ -18,6 +18,10 @@ Run `src/main/resources/db/init.sql` on the database.
 
 Create `application.properties` from `application.properties.template` in `src/main/resources/` and fill in the values.
 
+### Prepare RSA Key Pair
+
+Create an RSA key pair and put the private key in `src/main/resources/public.crt` and the public key in `src/main/resources/private.key`.
+
 ## Start
 
 Run `mvn spring-boot:run` to start the application.
