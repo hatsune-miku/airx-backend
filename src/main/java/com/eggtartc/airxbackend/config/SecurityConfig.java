@@ -70,7 +70,7 @@ public class SecurityConfig {
                     .requestMatchers("/auth/activate/**").permitAll()
                     .requestMatchers("/").permitAll()
                     .requestMatchers("/debug/**").permitAll()
-                    .requestMatchers("/api-docs").denyAll()
+                    .requestMatchers("/api-docs").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/swagger-ui.html").permitAll()
                     .requestMatchers("/device-register").permitAll()
